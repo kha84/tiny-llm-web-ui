@@ -4,6 +4,10 @@ import datetime
 from flask import Flask, request, session, render_template, redirect, url_for
 import openai
 
+# Model to use. Possible values are: 'dummy', 'openai'
+MODEL = 'dummy'
+
+
 # Parse command line arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--api_key", help="OpenAI API key")
@@ -26,6 +30,23 @@ if not args.api_key:
 
 app = Flask(__name__)
 app.secret_key = 'your secret key'
+
+glob_v = 0
+
+def get_response(model, question):
+    if (model == 'openai'):
+        # Send question to ChatGPT and get response
+        response = openai.ChatCompletion.create(
+          model="gpt-3.5-turbo",
+          messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": question},
+            ]
+        )
+        answer = response['choices'][0]['message']['content']
+        return answer
+    if (model == 'dummy'):
+        return 'He he he'
 
 @app.route('/',  methods=['GET', 'POST'])
 def root():
@@ -55,21 +76,12 @@ def ask():
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         log_message = f'{timestamp} | IP: {ip_address} | Question: {question}'
         with open('logfile.txt', 'a') as f:
-            f.write(log_message + '\n')        
-        # Send question to ChatGPT and get response
-        #response = openai.ChatCompletion.create(
-        #  model="gpt-3.5-turbo",
-        #  messages=[
-        #        {"role": "system", "content": "You are a helpful assistant."},
-        #        {"role": "user", "content": question},
-        #    ]
-        #)
-        #answer = response['choices'][0]['message']['content']
-        answer = 'He he he'
+            f.write(log_message + '\n')
+        answer = get_response(MODEL, question)
         # Log the response
+        log_message = f'{timestamp} | IP: {ip_address} | Answer: {answer}'
         with open('logfile.txt', 'a') as f:
-            f.write('====== Reply from OpenAI ==== \n')
-            f.write(f'{answer}\n')
+            f.write(log_message + '\n')
         return {'user_message': question, 'bot_message': answer}
 
 if __name__ == '__main__':
