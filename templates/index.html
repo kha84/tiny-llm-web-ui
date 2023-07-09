@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LtlHlpr</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+
+    $(document).ready(function() {
+      
+      /*
+      $('#user_message').keydown(function(event) {
+        if (event.keyCode === 13 && !event.shiftKey) {
+          event.preventDefault();
+        }
+      });
+      */
+
+
+      $('form').on('submit', function(event) {
+        event.preventDefault();
+        
+        // Disable the Send button
+        $('#send_button').prop('disabled', true);
+        
+        $.ajax({
+          data: {
+            user_message: $('#user_message').val()
+          },
+          type: 'POST',
+          url: '/chat',
+          success: function(response) {
+            $('#chat_history').append('<p><strong>You:</strong><pre>' + response.user_message + '</pre></p>');
+            $('#chat_history').append('<p><strong>Bot:</strong><pre>' + response.bot_message + '</pre></p>');
+            $('#user_message').val('');
+            
+            // Enable the Send button
+            $('#send_button').prop('disabled', false);
+          }
+        });
+      });
+      });
+  </script>
+  <style>
+    #user_message {
+      height: 100px;
+      width: 80%; /* Set the textarea to take 90% of screen width */
+      resize: none; /* Disable textarea resizing */
+      position: fixed; /* Position the textarea at the bottom */
+      bottom: 10px;
+      left: 5%; /* Align the textarea to the left */
+    }
+    #send_button {
+      height: 100px;
+      width: 10%;
+      resize: none;
+      position: fixed;
+      bottom: 10px;
+      left: 86%;  	    
+    }
+  </style>
+</head>
+<body>
+  <div id="chat_history"></div>
+  <form>
+    <textarea id="user_message" required></textarea>
+    <input type="submit" value="Send" id="send_button">
+  </form>
+</body>
+</html>
