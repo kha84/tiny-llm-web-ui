@@ -1,5 +1,6 @@
 #!/bin/env python
 import argparse
+import datetime
 from flask import Flask, request, session, render_template, redirect, url_for
 import openai
 
@@ -30,8 +31,7 @@ app.secret_key = 'your secret key'
 def root():
     if 'logged_in' not in session:
         return redirect(url_for('login'))
-    print("Showing main page")
-    return render_template('index.html')
+    return render_template('index.html', username=args.username)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -39,7 +39,7 @@ def login():
         # Check user credentials here
         if request.form['username'] == args.username and request.form['password'] == args.password:
             session['logged_in'] = True
-            return redirect(url_for('/'))
+            return redirect(url_for('root'))
     return render_template('login.html')
 
 @app.route('/chat', methods=['GET', 'POST'])
@@ -47,26 +47,29 @@ def ask():
     if 'logged_in' not in session:
         return redirect(url_for('login'))
     if request.method == 'POST':
-        print("Recieved question!")
         # Get question from form data
         question = request.form['user_message']
         # Get IP address
         ip_address = request.remote_addr
-        # Log IP address and question
+        # Log IP address, timestamp, and question
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        log_message = f'{timestamp} | IP: {ip_address} | Question: {question}'
         with open('logfile.txt', 'a') as f:
-            f.write(f'{ip_address}: {question}\n')
+            f.write(log_message + '\n')        
         # Send question to ChatGPT and get response
-        response = openai.ChatCompletion.create(
-          model="gpt-3.5-turbo",
-          messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": question},
-            ]
-        )
-        print("Response received!");
-        response
-        # Extract the assistant's reply
-        answer = response['choices'][0]['message']['content']
+        #response = openai.ChatCompletion.create(
+        #  model="gpt-3.5-turbo",
+        #  messages=[
+        #        {"role": "system", "content": "You are a helpful assistant."},
+        #        {"role": "user", "content": question},
+        #    ]
+        #)
+        #answer = response['choices'][0]['message']['content']
+        answer = 'He he he'
+        # Log the response
+        with open('logfile.txt', 'a') as f:
+            f.write('====== Reply from OpenAI ==== \n')
+            f.write(f'{answer}\n')
         return {'user_message': question, 'bot_message': answer}
 
 if __name__ == '__main__':
